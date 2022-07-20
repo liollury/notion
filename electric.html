@@ -1,0 +1,465 @@
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/3.0.0/mustache.min.js"></script>
+    <style>
+      body {
+        font-family: Arial;
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      .content {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+
+      }
+      .content .line:nth-child(n+4), .content .line:nth-child(1) {
+        grid-column: 1 / 3;
+      }
+      .disjoncteur {
+        display: flex;
+        flex-direction: column;
+        width: 60px;
+        height: 230px;
+        border: 2px solid black;
+      }
+      .disjoncteur.differentiel {
+        width: 120px;
+      }
+      .vis-container {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        padding: 0 5px;
+      }
+      .vis {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        border: 1px solid black;
+        background-color: #c5c5c5;
+      }
+      .vis.rot30 {
+        transform: rotate(-30deg);
+      }
+      .vis.rot60 {
+        transform: rotate(60deg);
+      }
+      .vis .trait {
+        width: 100%;
+        height: 1px;
+        border: 1px solid grey;
+      }
+      .neutre {
+        font-size: 0.8em;
+        padding: 5px 0 0 10px;
+      }
+      .center {
+        flex: 1;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+       }
+      .blue-square {
+        width: 100%;
+        height: 40%;
+        margin-top: 5px;
+        border-top: 1px solid black;
+        background: linear-gradient(90deg, rgba(159,165,205,1) 0%, rgba(238,240,255,1) 10%, rgba(238,240,255,1) 90%, rgba(159,165,205,1) 100%);
+      }
+      .haut-gach {
+        width: 100%;
+        height: 15px;
+        margin-top: -8px;
+        background-color: black;
+        border-top-left-radius: 50%;
+        border-top-right-radius: 50%;
+      }
+      .centre-gach {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        width: 50%;
+        height: 30px;
+        background-color: black;
+      }
+      .disjoncteur.differentiel .centre-gach {
+        margin-left: 25%;
+      }
+      .diff {
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+      }
+      .diff > * {
+        flex: 1;
+      }
+
+      .diff .ma {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        font-size: 0.8em;
+      }
+      .on {
+        width: 100%;
+        text-align: center;
+        color: #939393;
+        font-size: 0.9em;
+        background: linear-gradient(180deg, #ff0000 0%, #880000 50%, #000000 100%);
+      }
+      .ampere {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        height: 40px;
+        font-size: 1.4em;
+        font-weight: bold;
+        border-top: 2px solid black;
+        border-bottom: 2px solid black;
+
+      }
+      .info {
+        font-size: 0.9em;
+        writing-mode: vertical-rl;
+        text-orientation: mixed;
+      }
+      .info span {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        max-height: 200px;
+        padding: 10px 0;
+        overflow: hidden;
+      }
+      .line {
+        display: flex;
+        flex-direction: row;
+      }
+
+      .modal {
+        display: none;
+        position: absolute;
+        min-width: 400px;
+        min-height: 250px;
+        top: calc(50% - 125px);
+        left: calc(50% - 200px);
+        border: 1px solid black;
+        border-radius: 4px;
+        background-color: white;
+      }
+
+      .modal.visible {
+        display: block;
+        z-index: 1;
+      }
+
+      .button {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+      }
+
+      .close {
+        padding: 5px 10px;
+        background-color: rgb(216, 218, 236);
+        border-radius: 4px;
+        border: 1px solid rgb(167, 170, 194);
+      }
+    </style>
+
+  </head>
+  <body>
+    <div class="content"></div>
+
+
+
+    <script>
+      const lines = [
+        [
+          {
+            title: 'Chauffage sdb + grenier',
+            items: [
+              'Chauffage salle de bain',
+              'Grenier prise et lumière'
+            ]
+          },
+          {
+            title: '',
+            items: []
+          },
+          {
+            title: '',
+            items: []
+          },
+          {
+            title: '',
+            items: []
+          }
+        ],
+
+        [
+          {
+            title: 'Plaques et prises téléscopique',
+            items: [
+              'Plaque de cuisson',
+              'Prise téléscopique cuisine (côté plaque)'
+            ]
+          },
+          {
+            title: 'Machine à laver',
+            items: [
+              'Prise garage (machine à laver)'
+            ]
+          }
+        ],
+
+        [
+          {
+            title: 'Prises garages',
+            items: [
+              'Prises garage (hors machine à laver)'
+            ]
+          },
+          {
+            title: 'Prises au sol',
+            items: [
+              'Prises au sol'
+            ]
+          },
+          {
+            title: 'Prise disjoncteur',
+            items: [
+              'Prise disjoncteur (NAS, Freebox, HA)'
+            ]
+          },
+          {
+            title: 'Prise RdC et hotte',
+            items: [
+              'Prise bar mur rouge, frigo',
+              'Prise dejeunette (gauche du frigo)',
+              'Prise porte d\'entrée',
+              'Prise bureau (2 prises télétravail)',
+              'Prise poteau',
+              'Hotte'
+            ]
+          }
+        ],
+
+        [
+          {
+            title: 'VMC',
+            items: [
+              'VMC'
+            ]
+          },
+          {
+            title: 'Volets éléctriques',
+            items: [
+              'Volets éléctriques'
+            ]
+          },
+          {
+            title: 'Lumières garage',
+            items: [
+              'Lumière garage'
+            ]
+          },
+          {
+            title: 'Lumières',
+            items: [
+              'Lumière salle à manger',
+              'Lumière local technique',
+              'Lumière cuisine et sous meuble',
+              'Lumière salon',
+              'Lumière bar',
+              'Lumière extérieur',
+              'Detecteur mouvement local tehnique',
+              '/!\\ WC a moitier allumé quand descendu',
+            ]
+          },
+          {
+            title: 'Lumières',
+            items: [
+              'Lumière couloir',
+              'Lumière chambre principale',
+              'Lumière chambre Mileva',
+              'Lumière salle de bain',
+              'Lumière chambre d\'amis',
+              'Lumière WC',
+            ]
+          },
+          {
+            title: 'IPX800',
+            items: [
+              'IPX800'
+            ]
+          },
+          {
+            title: 'Pompe de relevage',
+            items: [
+              'Pompe de relevage'
+            ]
+          },
+          {
+            title: 'Vide',
+            items: [ ]
+          },
+          {
+            title: 'Vide',
+            items: []
+          }
+        ],
+
+        [
+          {
+            title: 'Prises étage',
+            items: [
+              'Prise chambre principale (coté SdB)',
+              'Prise salle de bain',
+              'Prise chambre d\'amis coté couloir',
+            ]
+          },
+          {
+            title: 'Prises salon',
+            items: [
+              'Prise TV',
+              'Prise meuble TV droite',
+              'Prise meuble TV gauche',
+              'Prise bar sous fenêtre',
+            ]
+          },
+          {
+            title: 'Prises cuisine',
+            items: [
+              'Prise cuisine sous meuble',
+              'Prise micro-ondes',
+              'Prise frigo local technique',
+              'Lave vaisselle local technique',
+            ]
+          },
+          {
+            title: 'Four',
+            items: [
+              'Four'
+            ]
+          },
+          {
+            title: 'Prises cuisine',
+            items: [
+              'Prise téléscopique cuisine (sous fenêtre)',
+              'Lave vaisselle'
+            ]
+          },
+          {
+            title: 'Prise local tehnique',
+            items: [
+              'Prise haute local technique (mur cuisine)'
+            ]
+          },
+          {
+            title: 'Prises étage',
+            items: [
+              'Prise couloir',
+              'Prise chambre Mileva',
+              'Prise chambre amis (sauf côté couloir)',
+              'Prise chambre principal (sauf mur sdb)',
+              'Dressing (y compris lumière)',
+            ]
+          }
+        ],
+      ];
+
+      var output = Mustache.render(`
+  {{#.}}
+  <div class="line">
+    <div class="disjoncteur differentiel">
+      <div class="neutre">N</div>
+      <div class="vis-container">
+        <div class="vis rot30"><div class="trait"></div></div>
+        <div class="vis rot60"><div class="trait"></div></div>
+        <div class="vis rot30"><div class="trait"></div></div>
+        <div class="vis rot60"><div class="trait"></div></div>
+      </div>
+      <div class="center">
+          <div class="blue-square"></div>
+        <div class="diff">
+          <div>
+            <div class="haut-gach"></div>
+            <div class="centre-gach"><div class="on">on</div></div>
+          </div>
+          <div class="ma">30mA</div>
+        </div>
+        <div class="ampere">25A</div>
+      </div>
+      <div class="vis-container">
+        <div class="vis rot30"><div class="trait"></div></div>
+        <div class="vis rot60"><div class="trait"></div></div>
+        <div class="vis rot30"><div class="trait"></div></div>
+        <div class="vis rot60"><div class="trait"></div></div>
+      </div>
+      <div class="neutre">N</div>
+    </div>
+    {{#.}}
+    <div class="item">
+      <div class="disjoncteur">
+        <div class="neutre">N</div>
+        <div class="vis-container">
+          <div class="vis rot30"><div class="trait"></div></div>
+          <div class="vis rot60"><div class="trait"></div></div>
+        </div>
+        <div class="center">
+          <div class="blue-square"></div>
+          <div class="haut-gach"></div>
+          <div class="centre-gach"><div class="on">on</div></div>
+          <div class="ampere">25A</div>
+        </div>
+        <div class="vis-container">
+          <div class="vis rot30"><div class="trait"></div></div>
+          <div class="vis rot60"><div class="trait"></div></div>
+        </div>
+        <div class="neutre">N</div>
+      </div>
+      <div class="info">
+        <span>{{title}}</span>
+      </div>
+
+      <div class="modal">
+        <ul>
+          {{#items}}
+          <li>{{.}}</li>
+          {{/items}}
+        </ul>
+        <div class="button">
+            <button class="close">Close</button>
+        </div>
+      </div>
+    </div>
+    {{/.}}
+  </div>
+  {{/.}}
+`, lines);
+      document.querySelector('.content').innerHTML = output;
+
+      document.querySelectorAll('.item').forEach((elt) => elt.addEventListener('click', (z) => {
+        document.querySelectorAll('.modal').forEach((elt) => elt.className = 'modal');
+        z.target.closest('.item').querySelector('.modal').className = 'modal visible';
+      }));
+
+      document.querySelectorAll('.close').forEach((elt) => elt.addEventListener('click', (z) => {
+        document.querySelectorAll('.modal').forEach((elt) => elt.className = 'modal');
+        z.stopPropagation();
+      }));
+    </script>
+  </body>
+</html>
