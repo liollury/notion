@@ -15,6 +15,7 @@
         overflow: auto;
         display: grid;
         grid-template-columns: 1fr 2fr;
+        gap: 20px;
 
       }
       .content .line:nth-child(n+4), .content .line:nth-child(1) {
@@ -73,6 +74,7 @@
         height: 40%;
         margin-top: 5px;
         border-top: 1px solid black;
+        border-bottom: 1px solid black;
         background: linear-gradient(90deg, rgba(159,165,205,1) 0%, rgba(238,240,255,1) 10%, rgba(238,240,255,1) 90%, rgba(159,165,205,1) 100%);
       }
       .haut-gach {
@@ -187,7 +189,7 @@
 
 
     <script>
-      const lines = [
+      let lines = [
         [
           {
             title: 'Chauffage sdb + grenier',
@@ -381,6 +383,13 @@
           }
         ],
       ];
+
+      const urlSearchParams = new URLSearchParams(window.location.search);
+      const params = Object.fromEntries(urlSearchParams.entries());
+      if (params.lines) {
+        const linesToShow = params.lines.split(',').map((i) => parseInt(i));
+        lines = lines.filter((_, index) => linesToShow.includes(index + 1));
+      }
 
       var output = Mustache.render(`
   {{#.}}
