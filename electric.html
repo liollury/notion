@@ -17,7 +17,6 @@
                 display: grid;
                 grid-template-columns: 1fr 2fr;
                 gap: 20px;
-
             }
 
             .content .line:nth-child(n+4), .content .line:nth-child(1) {
@@ -111,6 +110,10 @@
                 background-color: black;
                 border-top-left-radius: 50%;
                 border-top-right-radius: 50%;
+            }
+
+            .no-gach {
+                height: 37px;
             }
 
             .centre-gach {
@@ -216,6 +219,51 @@
                 border-radius: 4px;
                 border: 1px solid rgb(167, 170, 194);
             }
+
+            .content.labels {
+                display: flex;
+                flex-direction: row;
+                flex-wrap: wrap;
+                max-width: 29.7cm;
+                height: auto;
+                gap: 0;
+            }
+
+            .content.labels .line {
+                width: 100%;
+                height: 2.6cm;
+                margin-bottom: 0.5cm;
+            }
+
+            .content.labels .line:nth-child(2), .content.labels .line:nth-child(3) {
+                width: auto;
+                padding-right: 36mm;
+            }
+
+            .line.labels {
+                border-top: 1px dashed dimgrey;
+                border-bottom: 1px dashed dimgrey;
+            }
+
+            .diff-blank {
+                width: 37mm;
+            }
+
+            .diff-blank.largeur63A {
+                width: 55mm;
+            }
+
+            .disjoncteur-label {
+                display: flex;
+                align-items: center;
+                justify-content: flex-end;
+                text-align: end;
+                width: 18mm;
+                font-size: 0.7em;
+                writing-mode: vertical-rl;
+                text-orientation: mixed;
+                padding-bottom: 5px;
+            }
         </style>
 
     </head>
@@ -238,17 +286,17 @@
                     size: 16
                   },
                   {
-                    title: '',
+                    title: 'AUER - plancher chauffant',
                     items: [],
                     size: 10
                   },
                   {
-                    title: '',
+                    title: 'Pompe à chaleur',
                     items: [],
                     size: 32
                   },
                   {
-                    title: '',
+                    title: 'Pompe à chaleur',
                     items: [],
                     size: 32
                   },
@@ -258,9 +306,10 @@
                     size: 20
                   },
                   {
-                    title: '',
+                    title: 'PV Router J/N',
                     items: [],
-                    empty: true
+                    size: 20,
+                    noSwitch: true
                   },
                   {
                     title: 'Panneaux solaires',
@@ -499,8 +548,9 @@
             const linesToShow = params.lines.split(',').map((i) => parseInt(i));
             lines = lines.filter((_, index) => linesToShow.includes(index + 1));
           }
-
-          var output = Mustache.render(`
+          let output;
+          if (!params.labels) {
+            output = Mustache.render(`
   {{#.}}
   <div class="line">
     <div class="disjoncteur differentiel">
@@ -543,9 +593,16 @@
           {{^parafoudre}}
           {{^qrelay}}
           <div class="blue-square"></div>
+          {{#noSwitch}}
+          <div class="no-gach"></div>
+          {{/noSwitch}}
+          {{^noSwitch}}
           <div class="haut-gach"></div>
           <div class="centre-gach"><div class="on">on</div></div>
+          {{/noSwitch}}
+          {{#size}}
           <div class="ampere">{{size}}A</div>
+          {{/size}}
           {{/qrelay}}
           {{/parafoudre}}
           {{#parafoudre}}
@@ -585,6 +642,20 @@
   </div>
   {{/.}}
 `, lines);
+          } else {
+
+            output = Mustache.render(`
+  {{#.}}
+  <div class="line labels">
+    <div class="diff-blank largeur{{size}}A"></div>
+    {{#disjoncteurs}}
+    <div class="disjoncteur-label">{{title}}</div>
+    {{/disjoncteurs}}
+  </div>
+  {{/.}}
+  `, lines);
+            document.querySelector('.content').className += ' labels';
+          }
           document.querySelector('.content').innerHTML = output;
 
           document.querySelectorAll('.item').forEach((elt) => elt.addEventListener('click', (z) => {
